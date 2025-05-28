@@ -1,0 +1,122 @@
+{
+  "taleo": {
+    "name": "Taleo",
+    "description": "One of the most popular ATS, used by large corporations",
+    "parsing_rules": {
+      "preferred_format": "chronological",
+      "section_headings": ["Education", "Experience", "Skills", "Projects"],
+      "keywords_importance": "high",
+      "formatting_preferences": {
+        "bullet_points": true,
+        "tables": false,
+        "images": false,
+        "headers_footers": false,
+        "columns": false,
+        "fancy_fonts": false
+      },
+      "file_preferences": ["pdf", "docx", "txt"],
+      "recommended_fonts": ["Arial", "Times New Roman", "Calibri"],
+      "special_notes": "Emphasizes chronological work history and keywords matching job description"
+    }
+  },
+  "greenhouse": {
+    "name": "Greenhouse",
+    "description": "Popular with tech companies and startups",
+    "parsing_rules": {
+      "preferred_format": "hybrid",
+      "section_headings": ["Experience", "Skills", "Education", "Projects"],
+      "keywords_importance": "medium",
+      "formatting_preferences": {
+        "bullet_points": true,
+        "tables": false,
+        "images": false,
+        "headers_footers": true,
+        "columns": true,
+        "fancy_fonts": false
+      },
+      "file_preferences": ["pdf", "docx"],
+      "recommended_fonts": ["Calibri", "Arial", "Helvetica"],
+      "special_notes": "More forgiving with layout but emphasizes relevant skills"
+    }
+  },
+  "workday": {
+    "name": "Workday",
+    "description": "Enterprise-level ATS with comprehensive parsing capabilities",
+    "parsing_rules": {
+      "preferred_format": "chronological",
+      "section_headings": ["Professional Summary", "Work Experience", "Skills", "Education"],
+      "keywords_importance": "very high",
+      "formatting_preferences": {
+        "bullet_points": true,
+        "tables": false,
+        "images": false,
+        "headers_footers": false,
+        "columns": false,
+        "fancy_fonts": false
+      },
+      "file_preferences": ["pdf", "txt", "docx"],
+      "recommended_fonts": ["Arial", "Calibri", "Tahoma"],
+      "special_notes": "Excellent at parsing chronological resumes with clear section headers"
+    }
+  },
+  "lever": {
+    "name": "Lever",
+    "description": "Modern ATS used by many tech companies",
+    "parsing_rules": {
+      "preferred_format": "hybrid",
+      "section_headings": ["Experience", "Projects", "Skills", "Education"],
+      "keywords_importance": "medium",
+      "formatting_preferences": {
+        "bullet_points": true,
+        "tables": true,
+        "images": false,
+        "headers_footers": true,
+        "columns": true,
+        "fancy_fonts": true
+      },
+      "file_preferences": ["pdf", "docx"],
+      "recommended_fonts": ["Open Sans", "Roboto", "Helvetica Neue"],
+      "special_notes": "More flexible with modern formatting and less rigid structure"
+    }
+  },
+  "icims": {
+    "name": "iCIMS",
+    "description": "Enterprise recruiting platform with strong parsing capabilities",
+    "parsing_rules": {
+      "preferred_format": "chronological",
+      "section_headings": ["Summary", "Professional Experience", "Technical Skills", "Education"],
+      "keywords_importance": "high",
+      "formatting_preferences": {
+        "bullet_points": true,
+        "tables": false,
+        "images": false,
+        "headers_footers": false,
+        "columns": false,
+        "fancy_fonts": false
+      },
+      "file_preferences": ["pdf", "docx", "txt"],
+      "recommended_fonts": ["Arial", "Times New Roman", "Calibri"],
+      "special_notes": "Focuses heavily on keywords and chronological work history"
+    }
+  },
+  "jobvite": {
+    "name": "Jobvite",
+    "description": "Comprehensive talent acquisition platform",
+    "parsing_rules": {
+      "preferred_format": "chronological",
+      "section_headings": ["Professional Experience", "Skills", "Education", "Certifications"],
+      "keywords_importance": "medium",
+      "formatting_preferences": {
+        "bullet_points": true,
+        "tables": false,
+        "images": false,
+        "headers_footers": true,
+        "columns": false,
+        "fancy_fonts": false
+      },
+      "file_preferences": ["pdf", "docx"],
+      "recommended_fonts": ["Arial", "Calibri", "Georgia"],
+      "special_notes": "Good at identifying relevant experience based on job description"
+    }
+  }
+}
