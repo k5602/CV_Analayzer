@@ -63,6 +63,12 @@ class AnalyzerController:
             if not os.path.exists(resume_file_path):
                 logger.error(f"Resume file not found: {resume_file_path}")
                 return {"error": "Resume file not found"}
+                
+            # Check if file is a valid type
+            ext = os.path.splitext(resume_file_path)[1].lower()
+            if ext not in ['.pdf', '.docx', '.doc', '.txt']:
+                logger.error(f"Unsupported file format: {ext}")
+                return {"error": f"Unsupported file format: {ext}. Please use PDF, DOCX, or TXT files."}
             
             logger.info(f"Starting analysis for resume: {os.path.basename(resume_file_path)}")
             
@@ -71,8 +77,18 @@ class AnalyzerController:
             resume_data = self.resume_parser.parse_resume(resume_file_path)
             
             if "error" in resume_data:
-                logger.error(f"Resume parsing error: {resume_data['error']}")
-                return resume_data
+                # Check if it's an OCR-related error
+                error_msg = resume_data['error']
+                if "OCR" in error_msg or "image" in error_msg:
+                    logger.warning(f"OCR-related issue: {error_msg}")
+                    # Continue with limited data if possible
+                    if not resume_data.get("full_text"):
+                        resume_data["full_text"] = "Limited text could be extracted from image-based PDF."
+                    # Add a note about OCR limitations
+                    resume_data["ocr_limitation"] = True
+                else:
+                    logger.error(f"Resume parsing error: {error_msg}")
+                    return resume_data
             
             # Step 2: Check ATS compatibility
             logger.info(f"Checking ATS compatibility for platform: {ats_platform or 'default'}")
@@ -117,6 +133,13 @@ class AnalyzerController:
                     "education_match": keyword_analysis.get("education_match_percentage", 0) if keyword_analysis else None
                 }
             }
+            
+            # Add OCR information if applicable
+            if resume_data.get("ocr_limitation"):
+                result["ocr_used"] = True
+                if "feedback" in result and "summary" in result["feedback"]:
+                    result["feedback"]["summary"] = "⚠️ LIMITED OCR: " + result["feedback"]["summary"]
+                    result["feedback"]["ocr_notice"] = "This resume appears to be image-based. OCR was used to extract text, but results may be limited."
             
             logger.success(f"Analysis complete for resume: {os.path.basename(resume_file_path)}")
             return result

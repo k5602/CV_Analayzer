@@ -290,6 +290,16 @@ class MainView(ctk.CTk):
     def _setup_summary_tab(self):
         """Set up the summary tab with overview information"""
         self.summary_tab.grid_columnconfigure(0, weight=1)
+        
+        # OCR Notice (initially hidden)
+        self.ocr_notice = ctk.CTkLabel(
+            self.summary_tab,
+            text="⚠️ Image-based PDF detected. OCR was used but results may be limited.",
+            font=ctk.CTkFont(size=14),
+            text_color="#FF9800",  # Orange warning color
+        )
+        self.ocr_notice.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
+        self.ocr_notice.grid_remove()  # Hide initially
 
         # ATS Score Frame
         score_frame = ctk.CTkFrame(self.summary_tab)
@@ -614,13 +624,20 @@ class MainView(ctk.CTk):
         self.progress_bar.grid_remove()
 
     def display_results(self, results):
-        """Display analysis results in the interface"""
+        # Display analysis results in the interface"""
         try:
             if "error" in results:
                 messagebox.showerror("Analysis Error", results["error"])
                 self.reset_analysis_ui()
                 return
-
+                
+            # Check if OCR was used
+            if results.get("ocr_used"):
+                messagebox.showwarning(
+                    "OCR Processing Used", 
+                    "This resume appears to be image-based. OCR was used to extract text, but results may be limited."
+                )
+                
             # Get main components
             resume_data = results.get("resume_data", {})
             ats_analysis = results.get("ats_analysis", {})
@@ -642,6 +659,14 @@ class MainView(ctk.CTk):
             # Update summary text
             self.summary_text.delete("1.0", "end")
             self.summary_text.insert("1.0", feedback.get("summary", "No summary feedback available."))
+            
+            # Show OCR notice if applicable
+            if results.get("ocr_used"):
+                self.ocr_notice.grid()
+                if feedback.get("ocr_notice"):
+                    self.ocr_notice.configure(text=feedback.get("ocr_notice"))
+            else:
+                self.ocr_notice.grid_remove()
 
             # Update ATS tab
             self.platform_value.configure(text=ats_analysis.get("ats_platform", "Default"))
@@ -755,8 +780,7 @@ class MainView(ctk.CTk):
         ax.spines['right'].set_visible(False)
 
         # Add threshold line at 70%
-        ax.axhline(y=70, color='gray', linestyle='
---', alpha=0.7)
+        ax.axhline(y=70, color='gray', linestyle='--', alpha=0.7)
         ax.text(len(categories)-1, 72, 'Target (70%)', ha='right', fontsize=8, style='italic')
         
         # Create canvas and embed in frame

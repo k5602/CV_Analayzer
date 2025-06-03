@@ -18,6 +18,10 @@ except ImportError:
     PYTESSERACT_AVAILABLE = False
 import io
 import pandas as pd
+import fitz  # PyMuPDF for PDF processing
+import tempfile
+import shutil
+from pathlib import Path
 
 class ResumeParser:
     """
@@ -29,6 +33,7 @@ class ResumeParser:
         """Initialize the ResumeParser with NLP models and skills database."""
         self.nlp = None
         self.skills_db = None
+        self.use_ocr = True  # Default to using OCR for image-based PDFs
 
         # Regex patterns for various data extraction
         self._compile_regex_patterns()
@@ -48,6 +53,11 @@ class ResumeParser:
                     logger.warning(f"Could not load spaCy model: {e}. Some functionality will be limited.")
             else:
                 logger.warning("SpaCy not available. Some functionality will be limited.")
+                
+            # Check if OCR is available
+            if not PYTESSERACT_AVAILABLE:
+                logger.warning("Pytesseract not available. OCR functionality will be limited.")
+                self.use_ocr = False
 
             logger.success("ResumeParser initialized successfully")
         except Exception as e:
@@ -188,7 +198,14 @@ class ResumeParser:
                         text += page.extract_text() + "\n"
             except Exception as e2:
                 logger.error(f"PyPDF2 extraction also failed: {e2}")
-                # Could add more fallbacks here if needed
+
+        # If we got less than 100 characters or suspicious content, the PDF might be image-based
+        # Check if text is suspiciously short or mostly whitespace/special chars
+        if len(text.strip()) < 100 or self._appears_to_be_image_pdf(text):
+            logger.info("PDF appears to be image-based, attempting OCR extraction")
+            ocr_text = self._extract_text_using_ocr(pdf_path)
+            if ocr_text:
+                text = ocr_text
 
         return text
 
@@ -198,6 +215,11 @@ class ResumeParser:
         tables, non-standard fonts, etc.
         """
         try:
+            # First check if this is an image-based PDF
+            if self._is_image_based_pdf(pdf_path):
+                logger.info("PDF is image-based (scanned document)")
+                return True
+                
             with pdfplumber.open(pdf_path) as pdf:
                 for page in pdf.pages:
                     # Check for tables
@@ -570,6 +592,137 @@ class ResumeParser:
 
         return summary
 
+    def _appears_to_be_image_pdf(self, extracted_text: str) -> bool:
+        """
+        Check if the extracted text appears to be from an image-based PDF.
+        This is a heuristic check based on text quality.
+        
+        Args:
+            extracted_text: Text extracted from PDF
+            
+        Returns:
+            True if the PDF appears to be image-based
+        """
+        text = extracted_text.strip()
+        
+        # If no text was extracted, likely an image PDF
+        if not text:
+            return True
+            
+        # If text is too short, might be image PDF with poor OCR or just headers
+        if len(text) < 100:
+            return True
+            
+        # Check for common OCR artifacts or gibberish
+        weird_char_count = len(re.findall(r'[^\w\s,.;:!?()[\]{}\'"-]', text))
+        total_char_count = len(text)
+        
+        # If more than 15% of characters are weird, likely OCR artifacts
+        if total_char_count > 0 and weird_char_count / total_char_count > 0.15:
+            return True
+            
+        # Check for common resume sections - if none found, might be image PDF
+        common_sections = ['experience', 'education', 'skills', 'profile', 'summary', 
+                          'work', 'project', 'contact', 'qualification']
+        section_matches = 0
+        for section in common_sections:
+            if re.search(r'\b' + re.escape(section) + r'\b', text.lower()):
+                section_matches += 1
+                
+        # If less than 2 common resume sections found, likely an image PDF
+        if section_matches < 2:
+            return True
+            
+        return False
+        
+    def _is_image_based_pdf(self, pdf_path: str) -> bool:
+        """
+        Determine if a PDF is primarily image-based (scanned document).
+        
+        Args:
+            pdf_path: Path to the PDF file
+            
+        Returns:
+            True if the PDF appears to be image-based
+        """
+        try:
+            # Use PyMuPDF (fitz) to analyze PDF structure
+            doc = fitz.open(pdf_path)
+            
+            # Count pages with images vs pages with text
+            image_page_count = 0
+            total_pages = doc.page_count
+            
+            for page_num in range(total_pages):
+                page = doc[page_num]
+                
+                # Check if page has text
+                text = page.get_text()
+                if len(text.strip()) < 50:  # If page has minimal text
+                    # Check if page has images
+                    image_list = page.get_images()
+                    if len(image_list) > 0:
+                        image_page_count += 1
+                        
+            # If more than 50% of pages are image-based, consider it an image PDF
+            if total_pages > 0 and image_page_count / total_pages > 0.5:
+                return True
+                
+            return False
+        except Exception as e:
+            logger.error(f"Error checking if PDF is image-based: {e}")
+            # If we can't determine, assume it's not image-based
+            return False
+            
+    def _extract_text_using_ocr(self, pdf_path: str) -> str:
+        """
+        Extract text from PDF using OCR for image-based PDFs.
+        
+        Args:
+            pdf_path: Path to the PDF file
+            
+        Returns:
+            Extracted text as string
+        """
+        if not self.use_ocr or not PYTESSERACT_AVAILABLE:
+            logger.warning("OCR requested but pytesseract is not available")
+            return ""
+            
+        try:
+            logger.info("Starting OCR extraction from PDF")
+            extracted_text = ""
+            temp_dir = tempfile.mkdtemp()
+            
+            try:
+                # Open PDF with PyMuPDF
+                pdf_document = fitz.open(pdf_path)
+                
+                # Process each page
+                for page_number in range(pdf_document.page_count):
+                    # Get the page
+                    page = pdf_document[page_number]
+                    
+                    # Convert page to image
+                    pix = page.get_pixmap(dpi=300)  # Higher DPI for better OCR
+                    image_path = os.path.join(temp_dir, f"page_{page_number}.png")
+                    pix.save(image_path)
+                    
+                    # Perform OCR on the image
+                    with Image.open(image_path) as img:
+                        page_text = pytesseract.image_to_string(img, lang='eng')
+                        extracted_text += page_text + "\n\n"
+                        
+                logger.success(f"Successfully extracted text from {pdf_document.page_count} pages using OCR")
+                return extracted_text
+                
+            finally:
+                # Clean up temporary directory
+                shutil.rmtree(temp_dir, ignore_errors=True)
+                
+        except Exception as e:
+            logger.error(f"Error during OCR extraction: {e}")
+            return ""
+            
     def _extract_projects(self, text: str) -> List[Dict]:
         """Extract projects from resume text."""
         projects = []

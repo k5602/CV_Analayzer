@@ -4,7 +4,7 @@ This Python application provides comprehensive resume/CV analysis with ATS (Appl
 
 ## Features
 
-- **Resume Parsing**: Extract structured data from PDF, DOCX, or TXT resumes
+- **Resume Parsing**: Extract structured data from PDF, DOCX, or TXT resumes (including OCR for scanned documents)
 - **ATS Compatibility Analysis**: Check for ATS-unfriendly elements and provide feedback
 - **Keyword Matching**: Compare resume keywords to job descriptions using NLP techniques
 - **Feedback Generation**: Receive detailed suggestions to improve your resume
@@ -18,6 +18,7 @@ This Python application provides comprehensive resume/CV analysis with ATS (Appl
 
 - Python 3.7+
 - Required libraries (listed in requirements.txt)
+- Tesseract OCR (required for processing scanned/image-based documents)
 
 ### Setup Instructions
 
@@ -73,8 +74,12 @@ pip install customtkinter PyPDF2 pdfplumber matplotlib pandas
 ```
 
 3. For specific dependency issues:
-   - Python 3.10+ users may face compatibility issues with some packages
+   - Python 3.11+ users may face compatibility issues with some packages
    - Some packages require a C compiler for installation (spaCy, blis, etc.)
+   - To enable OCR functionality, install Tesseract OCR:
+     - Windows: Download from https://github.com/UB-Mannheim/tesseract/wiki
+     - macOS: `brew install tesseract`
+     - Linux: `sudo apt-get install tesseract-ocr` or equivalent
 
 ## Usage
 
@@ -113,13 +118,14 @@ The application supports different modes:
 - Ensure your resume has clear section headers (Experience, Education, Skills)
 - For best results with keyword matching, paste the complete job description
 - Try multiple ATS platforms to see how different systems might process your resume
+- For scanned resumes, ensure the scan quality is good for optimal OCR results
 
 ## Technical Details
 
 This application is built with:
 
 - **customtkinter**: For a modern, responsive GUI
-- **PyPDF2/pdfplumber**: For PDF parsing
+- **PyPDF2/pdfplumber/PyMuPDF**: For PDF parsing
 - **spaCy/NLTK**: For NLP tasks and entity recognition
 - **scikit-learn**: For keyword matching algorithms
 - **matplotlib**: For data visualization
@@ -129,6 +135,7 @@ This application is built with:
 
 - Python 3.7 or newer
 - 4GB RAM recommended for NLP processing
+- Tesseract OCR (for processing scanned documents)
 - Operating Systems:
   - Windows 10/11
   - macOS 10.15+
