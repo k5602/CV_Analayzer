@@ -14,6 +14,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from controllers.analyzer_controller import AnalyzerController
+from core.exceptions import CVAnalyzerError
 
 class MainView(ctk.CTk):
     """
@@ -177,6 +178,73 @@ class MainView(ctk.CTk):
         self.progress_bar.grid(row=12, column=0, padx=20, pady=5, sticky="ew")
         self.progress_bar.grid_remove()  # Hide initially
 
+    def show_error_dialog(self, message):
+        """Show a centralized error dialog using customtkinter or fallback to tkinter."""
+        try:
+            messagebox.showerror("Analysis Error", message)
+        except Exception:
+            tk.Tk().withdraw()
+            tk.messagebox.showerror("Analysis Error", message)
+
+    def set_progress(self, visible=True, value=0.0, message=""):
+        """Show/hide progress bar and label, and update value/message."""
+        if visible:
+            self.progress_label.configure(text=message)
+            self.progress_label.grid()
+            self.progress_bar.set(value)
+            self.progress_bar.grid()
+        else:
+            self.progress_label.grid_remove()
+            self.progress_bar.grid_remove()
+
+    def analyze_resume(self):
+        """Run resume analysis with progress indicator and error handling."""
+        def run_analysis():
+            try:
+                self.set_progress(True, 0.1, "Starting analysis...")
+                self.is_analyzing = True
+                self.analysis_results = None
+
+                resume_path = self.resume_path
+                job_description = self.job_description_text.get("1.0", "end").strip()
+                ats_platform = self.selected_ats
+
+                if not resume_path:
+                    self.set_progress(False)
+                    self.show_error_dialog("Please select a resume file before analyzing.")
+                    return
+
+                self.set_progress(True, 0.2, "Parsing resume...")
+                result = self.controller.analyze_resume(
+                    resume_file_path=resume_path,
+                    job_description=job_description if job_description else None,
+                    ats_platform=ats_platform
+                )
+
+                self.set_progress(True, 0.8, "Finalizing analysis...")
+
+                if "error" in result:
+                    self.set_progress(False)
+                    self.show_error_dialog(result["error"])
+                    self.is_analyzing = False
+                    return
+
+                self.analysis_results = result
+                self.set_progress(False)
+                self.is_analyzing = False
+                self.display_results()
+            except CVAnalyzerError as ce:
+                self.set_progress(False)
+                self.show_error_dialog(str(ce))
+                self.is_analyzing = False
+            except Exception as e:
+                self.set_progress(False)
+                self.show_error_dialog(f"Unexpected error: {str(e)}")
+                self.is_analyzing = False
+
+        # Run analysis in a separate thread to keep UI responsive
+        threading.Thread(target=run_analysis, daemon=True).start()
+
     def create_visualization_panel(self):
         """Create the top-right panel for visualizations"""
         viz_frame = ctk.CTkFrame(self)
@@ -290,7 +358,7 @@ class MainView(ctk.CTk):
     def _setup_summary_tab(self):
         """Set up the summary tab with overview information"""
         self.summary_tab.grid_columnconfigure(0, weight=1)
-        
+
         # OCR Notice (initially hidden)
         self.ocr_notice = ctk.CTkLabel(
             self.summary_tab,
@@ -630,14 +698,14 @@ class MainView(ctk.CTk):
                 messagebox.showerror("Analysis Error", results["error"])
                 self.reset_analysis_ui()
                 return
-                
+
             # Check if OCR was used
             if results.get("ocr_used"):
                 messagebox.showwarning(
-                    "OCR Processing Used", 
+                    "OCR Processing Used",
                     "This resume appears to be image-based. OCR was used to extract text, but results may be limited."
                 )
-                
+
             # Get main components
             resume_data = results.get("resume_data", {})
             ats_analysis = results.get("ats_analysis", {})
@@ -659,7 +727,7 @@ class MainView(ctk.CTk):
             # Update summary text
             self.summary_text.delete("1.0", "end")
             self.summary_text.insert("1.0", feedback.get("summary", "No summary feedback available."))
-            
+
             # Show OCR notice if applicable
             if results.get("ocr_used"):
                 self.ocr_notice.grid()
@@ -782,12 +850,12 @@ class MainView(ctk.CTk):
         # Add threshold line at 70%
         ax.axhline(y=70, color='gray', linestyle='--', alpha=0.7)
         ax.text(len(categories)-1, 72, 'Target (70%)', ha='right', fontsize=8, style='italic')
-        
+
         # Create canvas and embed in frame
         canvas = FigureCanvasTkAgg(fig, master=self.chart_frame)
         canvas_widget = canvas.get_tk_widget()
         canvas_widget.pack(fill=tk.BOTH, expand=True)
-    
+
     def _get_score_color(self, score):
         """Return color based on score value"""
         if score >= 80:
@@ -796,7 +864,7 @@ class MainView(ctk.CTk):
             return "#FF9800"  # Orange
         else:
             return "#F44336"  # Red
-    
+
     def _get_bar_color(self, value):
         """Return bar color based on score value"""
         if value >= 80:
@@ -805,23 +873,23 @@ class MainView(ctk.CTk):
             return "#FF9800"  # Orange
         else:
             return "#F44336"  # Red
-    
+
     def _update_contact_info(self, contact_info):
         """Update contact information display"""
         self.contact_text.delete("1.0", "end")
         text = f"Name: {contact_info.get('name', 'Not found')}\n"
         text += f"Email: {contact_info.get('email', 'Not found')}\n"
         text += f"Phone: {contact_info.get('phone', 'Not found')}\n"
-        
+
         if contact_info.get('linkedin'):
             text += f"LinkedIn: {contact_info.get('linkedin')}\n"
         if contact_info.get('github'):
             text += f"GitHub: {contact_info.get('github')}\n"
         if contact_info.get('location'):
             text += f"Location: {contact_info.get('location')}\n"
-        
+
         self.contact_text.insert("1.0", text)
-    
+
     def _update_skills(self, skills):
         """Update skills display"""
         self.skills_text.delete("1.0", "end")
@@ -829,135 +897,135 @@ class MainView(ctk.CTk):
             self.skills_text.insert("1.0", ", ".join(skills))
         else:
             self.skills_text.insert("1.0", "No skills identified in resume.")
-    
+
     def _update_experience(self, experience_list):
         """Update experience display"""
         self.experience_text.delete("1.0", "end")
         if not experience_list:
             self.experience_text.insert("1.0", "No experience entries found.")
             return
-        
+
         text = ""
         for i, exp in enumerate(experience_list):
             if i > 0:
                 text += "\n\n"
-                
+
             if exp.get('title'):
                 text += f"Title: {exp.get('title')}\n"
             if exp.get('company'):
                 text += f"Company: {exp.get('company')}\n"
             if exp.get('date_range'):
                 text += f"Period: {exp.get('date_range')}\n"
-                
+
             if exp.get('description'):
                 text += f"\n{exp.get('description')}"
-        
+
         self.experience_text.insert("1.0", text)
-    
+
     def _update_education(self, education_list):
         """Update education display"""
         self.education_text.delete("1.0", "end")
         if not education_list:
             self.education_text.insert("1.0", "No education entries found.")
             return
-        
+
         text = ""
         for i, edu in enumerate(education_list):
             if i > 0:
                 text += "\n\n"
-                
+
             if edu.get('degree'):
                 text += f"Degree: {edu.get('degree')}\n"
             if edu.get('institution'):
                 text += f"Institution: {edu.get('institution')}\n"
             if edu.get('date_range'):
                 text += f"Period: {edu.get('date_range')}"
-        
+
         self.education_text.insert("1.0", text)
-    
+
     def _prepare_comprehensive_feedback(self, feedback, results):
         """Prepare comprehensive feedback for detailed view"""
         self.feedback_text.delete("1.0", "end")
-        
+
         # Add summary
         self.feedback_text.insert("end", "SUMMARY FEEDBACK\n", "heading")
         self.feedback_text.insert("end", "================\n\n")
         self.feedback_text.insert("end", f"{feedback.get('summary', 'No summary available.')}\n\n\n")
-        
+
         # Add ATS compatibility feedback
         self.feedback_text.insert("end", "ATS COMPATIBILITY\n", "heading")
         self.feedback_text.insert("end", "================\n\n")
-        
+
         ats_feedback = feedback.get("ats_compatibility", {})
         self.feedback_text.insert("end", f"Score: {ats_feedback.get('score', 0)}%\n\n")
-        
+
         if ats_feedback.get("issues"):
             self.feedback_text.insert("end", "Issues:\n")
             for issue in ats_feedback.get("issues", []):
                 self.feedback_text.insert("end", f"• {issue}\n")
             self.feedback_text.insert("end", "\n")
-        
+
         if ats_feedback.get("recommendations"):
             self.feedback_text.insert("end", "Recommendations:\n")
             for rec in ats_feedback.get("recommendations", []):
                 self.feedback_text.insert("end", f"• {rec}\n")
             self.feedback_text.insert("end", "\n\n")
-        
+
         # Add content quality feedback
         self.feedback_text.insert("end", "CONTENT QUALITY\n", "heading")
         self.feedback_text.insert("end", "==============\n\n")
-        
+
         content_feedback = feedback.get("content_quality", {})
-        
+
         if content_feedback.get("strengths"):
             self.feedback_text.insert("end", "Strengths:\n")
             for strength in content_feedback.get("strengths", []):
                 self.feedback_text.insert("end", f"• {strength}\n")
             self.feedback_text.insert("end", "\n")
-        
+
         if content_feedback.get("weaknesses"):
             self.feedback_text.insert("end", "Areas for Improvement:\n")
             for weakness in content_feedback.get("weaknesses", []):
                 self.feedback_text.insert("end", f"• {weakness}\n")
             self.feedback_text.insert("end", "\n")
-        
+
         if content_feedback.get("recommendations"):
             self.feedback_text.insert("end", "Recommendations:\n")
             for rec in content_feedback.get("recommendations", []):
                 self.feedback_text.insert("end", f"• {rec}\n")
             self.feedback_text.insert("end", "\n\n")
-        
+
         # Add keyword match feedback if available
         keyword_feedback = feedback.get("keyword_match", {})
         if keyword_feedback and "score" in keyword_feedback:
             self.feedback_text.insert("end", "KEYWORD MATCHING\n", "heading")
             self.feedback_text.insert("end", "===============\n\n")
             self.feedback_text.insert("end", f"Score: {keyword_feedback.get('score', 0)}%\n\n")
-            
+
             if keyword_feedback.get("recommendations"):
                 self.feedback_text.insert("end", "Recommendations:\n")
                 for rec in keyword_feedback.get("recommendations", []):
                     self.feedback_text.insert("end", f"• {rec}\n")
                 self.feedback_text.insert("end", "\n\n")
-        
+
         # Add section-by-section feedback
         self.feedback_text.insert("end", "SECTION-BY-SECTION FEEDBACK\n", "heading")
         self.feedback_text.insert("end", "==========================\n\n")
-        
+
         section_feedback = results.get("section_feedback", {})
         for section_name, feedback_items in section_feedback.items():
             display_name = section_name.replace("_", " ").title()
             self.feedback_text.insert("end", f"{display_name} Section:\n", "subheading")
-            
+
             for item in feedback_items:
                 self.feedback_text.insert("end", f"• {item}\n")
-            
+
             self.feedback_text.insert("end", "\n")
-        
+
         # Configure tags for formatting
         self.feedback_text.tag_configure("heading", font=ctk.CTkFont(size=16, weight="bold"))
         self.feedback_text.tag_configure("subheading", font=ctk.CTkFont(size=14, weight="bold"))
-    
+
     def show_feedback_panel(self):
         """Display the comprehensive feedback panel"""
         if self.analysis_results:

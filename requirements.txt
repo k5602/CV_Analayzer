@@ -1,18 +1,25 @@
-customtkinter>=5.0.0
-PyPDF2>=3.0.0
-pdfplumber>=0.8.0
-pytesseract>=0.3.10
-spacy>=3.0.0,<3.6.0
-nltk>=3.8.0
-scikit-learn>=1.0.0
-sentence-transformers>=2.2.0
-keybert>=0.6.0
-matplotlib>=3.5.0
-seaborn>=0.12.0
-pandas>=1.3.0
-Pillow>=9.0.0
-python-docx>=0.8.11
-pyyaml>=6.0.0
-typing-extensions>=4.0.0
-loguru>=0.6.0
-PyMuPDF>=1.20.0
+# CV_Analayzer requirements.txt (version-pinned for compatibility)
+customtkinter==5.2.0         # Modern UI, tested with 5.2.0
+PyPDF2==3.0.1                # PDF parsing, tested with 3.0.1
+pdfplumber==0.9.0            # PDF text extraction, tested with 0.9.0
+pytesseract==0.3.10          # OCR, tested with 0.3.10
+spacy==3.5.4                  # NLP, compatible with en_core_web_sm
+nltk==3.8.1                  # NLP, tested with 3.8.1
+scikit-learn==1.3.2          # ML, tested with 1.3.2
+sentence-transformers==2.2.2 # Semantic similarity, tested with 2.2.2
+keybert==0.7.0               # Keyword extraction, tested with 0.7.0
+matplotlib==3.7.2            # Visualization, tested with 3.7.2
+seaborn==0.12.2              # Visualization, tested with 0.12.2
+pandas==2.0.3                # Data manipulation, tested with 2.0.3
+Pillow==9.5.0                # Image processing, tested with 9.5.0
+python-docx==0.8.11          # DOCX parsing, tested with 0.8.11
+pyyaml==6.0.1                # Config parsing, tested with 6.0.1
+typing-extensions==4.7.1     # Type hints, tested with 4.7.1
+loguru==0.7.2                # Logging, tested with 0.7.2
+PyMuPDF==1.22.5              # PDF parsing, tested with 1.22.5
+
+# Compatibility notes:
+# - spaCy 3.5.x is compatible with en_core_web_sm model
+# - Python >=3.7, <3.12 recommended for all dependencies
+# - For OCR, Tesseract binary must be installed separately
+# - If using minimal install, comment out optional packages

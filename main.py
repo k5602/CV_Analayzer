@@ -4,6 +4,10 @@ import tkinter as tk
 import importlib.util
 from datetime import datetime
 
+# Dependency validation and custom exceptions
+from core.dependency_validator import validate_and_exit_if_missing
+from core.exceptions import CVAnalyzerError
+
 # Add parent directory to path for imports
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
@@ -60,9 +64,9 @@ def fallback_to_basic_ui():
 
         frame = tk.Frame(root, padx=20, pady=20)
         frame.pack(fill=tk.BOTH, expand=True)
-        
+
         label = tk.Label(
-            frame, 
+            frame,
             text="Running in compatibility mode with limited functionality.\n\n"
                  "Please install all required dependencies for full features:\n"
                  "pip install -r requirements.txt",
@@ -70,18 +74,18 @@ def fallback_to_basic_ui():
             padx=20, pady=20
         )
         label.pack(pady=20)
-        
+
         # Basic resume upload button
         upload_button = tk.Button(
             frame,
             text="Select Resume",
             command=lambda: tk.messagebox.showinfo(
-                "Limited Functionality", 
+                "Limited Functionality",
                 "Full functionality requires all dependencies to be installed."
             )
         )
         upload_button.pack(pady=10)
-        
+
         # Info display
         info_text = tk.Text(frame, height=10, width=60)
         info_text.insert(tk.END, "CV Analyzer - Basic Mode\n\n")
@@ -90,13 +94,13 @@ def fallback_to_basic_ui():
         info_text.insert(tk.END, "2. Restart the application\n\n")
         info_text.config(state=tk.DISABLED)
         info_text.pack(pady=10, fill=tk.BOTH, expand=True)
-        
+
         # Exit button
         exit_button = tk.Button(frame, text="Exit", command=root.destroy)
         exit_button.pack(pady=10)
-        
+
         root.mainloop()
-        
+
     except Exception as e:
         print(f"ERROR: Could not create basic UI: {e}")
         print("Please install all dependencies with: pip install -r requirements.txt")
@@ -180,9 +184,8 @@ def main():
     try:
         logger.info("Starting CV Analyzer application")
 
-        # Check dependencies
-        if not check_dependencies():
-            return
+        # Validate dependencies before proceeding
+        validate_and_exit_if_missing()
 
         # Handle customtkinter vs standard tkinter
         if HAS_CUSTOMTKINTER:
@@ -218,6 +221,10 @@ def main():
 
         logger.info("Application closed normally")
 
+    except CVAnalyzerError as ce:
+        error_message = f"CVAnalyzerError: {str(ce)}"
+        logger.error(error_message)
+        show_error_dialog(error_message)
     except Exception as e:
         error_message = f"Error running application: {str(e)}"
         logger.error(error_message)
