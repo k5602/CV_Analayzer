@@ -1,23 +1,19 @@
 """
 KeywordFeedback: Generates keyword match feedback for resume analysis.
-Refactored out of FeedbackGenerator for single-responsibility.
+Only important context is commented for clarity.
 """
 
 from typing import Dict, List, Optional
 
 class KeywordFeedback:
     """
-    Provides feedback on keyword matching between resume and job description.
+    Feedback logic for keyword matching between resume and job description.
     """
 
     @staticmethod
     def generate(feedback: Dict, keyword_analysis: Optional[Dict]) -> None:
         """
-        Populate the feedback dictionary with keyword match score, matched/missing keywords, and recommendations.
-
-        Args:
-            feedback: The feedback dictionary to update.
-            keyword_analysis: The keyword analysis results.
+        Updates feedback dict with keyword match score, matched/missing keywords, and recommendations.
         """
         if not keyword_analysis:
             feedback["keyword_match"] = {
@@ -33,13 +29,13 @@ class KeywordFeedback:
         missing_keywords = keyword_analysis.get("missing_keywords", [])
         recommendations = []
 
-        # Recommend adding missing keywords
+        # Suggest missing keywords for improvement
         if missing_keywords:
             recommendations.append(
                 f"Consider adding these missing keywords from the job description: {', '.join(missing_keywords[:10])}"
             )
 
-        # Highlight strong matches
+        # Highlight strong matches for user awareness
         if matched_keywords:
             recommendations.append(
                 f"Strong keyword matches: {', '.join(matched_keywords[:10])}"
@@ -55,13 +51,7 @@ class KeywordFeedback:
     @staticmethod
     def summary(keyword_analysis: Optional[Dict]) -> str:
         """
-        Generate a summary string for keyword matching.
-
-        Args:
-            keyword_analysis: The keyword analysis results.
-
-        Returns:
-            Summary string.
+        Returns a human summary for keyword matching results.
         """
         if not keyword_analysis:
             return "No keyword matching performed (no job description provided)."

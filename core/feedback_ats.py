@@ -1,44 +1,39 @@
 """
 ATSFeedback: Generates ATS compatibility feedback for resume analysis.
-Refactored out of FeedbackGenerator for single-responsibility.
+Only key logic is commented for clarity.
 """
 
 from typing import Dict, List
 
 class ATSFeedback:
     """
-    Provides feedback on ATS compatibility based on analysis results.
+    Generates ATS compatibility feedback and summary for the UI.
     """
 
     @staticmethod
     def generate(feedback: Dict, ats_analysis: Dict) -> None:
         """
-        Populate the feedback dictionary with ATS compatibility issues and recommendations.
-
-        Args:
-            feedback: The feedback dictionary to update.
-            ats_analysis: The ATS analysis results.
+        Adds ATS compatibility issues and recommendations to feedback.
         """
         issues = []
         recommendations = []
 
-        # Score and issues
         score = ats_analysis.get("compatibility_score", 0)
         formatting_issues = ats_analysis.get("formatting_issues", [])
         structure_feedback = ats_analysis.get("structure_feedback", [])
         improvement_suggestions = ats_analysis.get("improvement_suggestions", [])
 
-        # Add formatting issues
+        # Formatting issues and suggestions
         if formatting_issues:
             issues.extend(formatting_issues)
             recommendations.extend([f"Fix formatting: {issue}" for issue in formatting_issues])
 
-        # Add structure feedback
+        # Structure feedback and suggestions
         if structure_feedback:
             issues.extend(structure_feedback)
             recommendations.extend([f"Improve structure: {fb}" for fb in structure_feedback])
 
-        # Add improvement suggestions
+        # General improvement suggestions
         if improvement_suggestions:
             recommendations.extend(improvement_suggestions)
 
@@ -51,13 +46,7 @@ class ATSFeedback:
     @staticmethod
     def summary(ats_analysis: Dict) -> str:
         """
-        Generate a summary string for ATS compatibility.
-
-        Args:
-            ats_analysis: The ATS analysis results.
-
-        Returns:
-            Summary string.
+        Returns a human-readable summary for ATS compatibility.
         """
         score = ats_analysis.get("compatibility_score", 0)
         platform = ats_analysis.get("ats_platform", "ATS")

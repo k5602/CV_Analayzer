@@ -1,45 +1,34 @@
-# Abstract base class for pluggable ATS platform implementations
+# Base class for ATS platform plugins.
+# Extend this for each ATS integration.
 
 from abc import ABC, abstractmethod
 from typing import Dict, Any
 
 class ATSPlatformBase(ABC):
     """
-    Abstract base class for ATS platform implementations.
-    Each ATS platform should inherit from this class and implement required methods.
+    Extend this class for each ATS platform.
+    Only override methods relevant to your platform.
     """
 
     @abstractmethod
     def get_name(self) -> str:
-        """
-        Returns the name of the ATS platform.
-        """
+        """Platform name for UI display."""
         pass
 
     @abstractmethod
     def get_description(self) -> str:
-        """
-        Returns a brief description of the ATS platform.
-        """
+        """Short description for UI/help."""
         pass
 
     @abstractmethod
     def get_parsing_rules(self) -> Dict[str, Any]:
-        """
-        Returns the parsing rules for the ATS platform.
-        """
+        """Return parsing rules (section order, formatting, etc)."""
         pass
 
     @abstractmethod
     def analyze_resume(self, resume_data: Dict[str, Any], job_description: str = None) -> Dict[str, Any]:
         """
-        Analyzes the resume data according to the platform's rules.
-
-        Args:
-            resume_data: Structured resume information.
-            job_description: Optional job description for keyword matching.
-
-        Returns:
-            Dictionary containing ATS compatibility analysis results.
+        Main entry for ATS analysis.
+        Return a dict with scores, issues, and suggestions.
         """
         pass

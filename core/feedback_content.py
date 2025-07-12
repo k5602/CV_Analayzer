@@ -1,30 +1,25 @@
-CV_Analayzer/core/feedback_content.py
 """
-ContentFeedback: Generates content quality feedback for resume analysis.
-Refactored out of FeedbackGenerator for single-responsibility.
+ContentFeedback: Generates strengths, weaknesses, and actionable recommendations for resume content.
+Only key logic is commented for clarity.
 """
 
 from typing import Dict, List, Any
 
 class ContentFeedback:
     """
-    Provides feedback on resume content quality, strengths, weaknesses, and recommendations.
+    Generates feedback on resume content quality for the user.
     """
 
     @staticmethod
     def generate(feedback: Dict[str, Any], resume_data: Dict[str, Any]) -> None:
         """
-        Populate the feedback dictionary with content quality strengths, weaknesses, and recommendations.
-
-        Args:
-            feedback: The feedback dictionary to update.
-            resume_data: The parsed resume data.
+        Analyze resume content and update feedback dict with strengths, weaknesses, and recommendations.
         """
         strengths = []
         weaknesses = []
         recommendations = []
 
-        # Strengths
+        # Section presence is a strength
         if resume_data.get("summary"):
             strengths.append("Includes a professional summary/objective.")
         if resume_data.get("experience") and len(resume_data["experience"]) > 0:
@@ -36,7 +31,7 @@ class ContentFeedback:
         if resume_data.get("projects") and len(resume_data["projects"]) > 0:
             strengths.append("Projects section is present.")
 
-        # Weaknesses
+        # Missing sections are flagged as weaknesses
         if not resume_data.get("summary"):
             weaknesses.append("Missing professional summary/objective.")
             recommendations.append("Add a concise summary or objective at the top of your resume.")
@@ -53,7 +48,7 @@ class ContentFeedback:
             weaknesses.append("Missing projects section.")
             recommendations.append("Include notable projects to showcase your experience and achievements.")
 
-        # Additional recommendations
+        # Heuristic for resume length
         if resume_data.get("full_text"):
             text = resume_data["full_text"]
             if len(text) < 500:
@@ -72,13 +67,7 @@ class ContentFeedback:
     @staticmethod
     def summary(resume_data: Dict[str, Any]) -> str:
         """
-        Generate a summary string for content quality.
-
-        Args:
-            resume_data: The parsed resume data.
-
-        Returns:
-            Summary string.
+        Summarize content quality for the user.
         """
         sections = [
             ("summary", "Summary"),

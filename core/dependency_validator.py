@@ -1,5 +1,5 @@
 # Dependency Validator for CV_Analayzer
-# Checks for required libraries, models, and binaries at startup
+# Checks for critical dependencies before app startup.
 
 import importlib.util
 import sys
@@ -7,6 +7,7 @@ import os
 from typing import List, Dict
 
 REQUIRED_LIBRARIES = [
+    # Core libraries for parsing, UI, and logging
     "PyPDF2",
     "pdfplumber",
     "docx",
@@ -18,9 +19,10 @@ REQUIRED_LIBRARIES = [
 ]
 
 OPTIONAL_LIBRARIES = [
+    # Optional: NLP, OCR, advanced keyword extraction
     "spacy",
     "pytesseract",
-    "fitz",  
+    "fitz",  # PyMuPDF
     "sentence_transformers",
     "keybert",
     "nltk",
@@ -28,17 +30,21 @@ OPTIONAL_LIBRARIES = [
 ]
 
 REQUIRED_MODELS = [
+    # spaCy model for entity extraction
     ("spacy", "en_core_web_sm"),
 ]
 
 REQUIRED_BINARIES = [
+    # OCR binary for scanned resumes
     ("tesseract", "Tesseract OCR"),
 ]
 
 def check_library_installed(lib_name: str) -> bool:
+    # Returns True if library is importable
     return importlib.util.find_spec(lib_name) is not None
 
 def check_model_installed(lib_name: str, model_name: str) -> bool:
+    # Checks if required NLP model is available
     if lib_name == "spacy":
         try:
             import spacy
@@ -49,31 +55,29 @@ def check_model_installed(lib_name: str, model_name: str) -> bool:
     return True
 
 def check_binary_installed(binary_name: str) -> bool:
+    # Checks if required binary (e.g. Tesseract) is in PATH
     from shutil import which
     return which(binary_name) is not None
 
 def validate_dependencies() -> Dict[str, List[str]]:
+    # Returns lists of missing dependencies for diagnostics
     missing_required = []
     missing_optional = []
     missing_models = []
     missing_binaries = []
 
-    # Check required libraries
     for lib in REQUIRED_LIBRARIES:
         if not check_library_installed(lib):
             missing_required.append(lib)
 
-    # Check optional libraries
     for lib in OPTIONAL_LIBRARIES:
         if not check_library_installed(lib):
             missing_optional.append(lib)
 
-    # Check required models
     for lib, model in REQUIRED_MODELS:
         if check_library_installed(lib) and not check_model_installed(lib, model):
             missing_models.append(f"{lib}:{model}")
 
-    # Check required binaries
     for binary, desc in REQUIRED_BINARIES:
         if not check_binary_installed(binary):
             missing_binaries.append(desc)
@@ -86,6 +90,7 @@ def validate_dependencies() -> Dict[str, List[str]]:
     }
 
 def print_dependency_report(report: Dict[str, List[str]]):
+    # Prints a summary of missing dependencies for user
     if report["missing_required"]:
         print("Missing required libraries:")
         for lib in report["missing_required"]:
@@ -104,6 +109,7 @@ def print_dependency_report(report: Dict[str, List[str]]):
             print(f"  - {binary}")
 
 def validate_and_exit_if_missing():
+    # Exits if any critical dependency is missing
     report = validate_dependencies()
     print_dependency_report(report)
     if report["missing_required"] or report["missing_models"] or report["missing_binaries"]:

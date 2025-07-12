@@ -1,6 +1,8 @@
 """
 ATSRuleLoader: Loads ATS platform rules from JSON or provides defaults.
-Refactored out of ATSChecker for single-responsibility.
+
+Handles ATS platform rules for resume analysis.
+If no config file is found, uses built-in defaults.
 """
 
 import os
@@ -11,10 +13,13 @@ from typing import Dict, Any, Optional
 class ATSRuleLoader:
     """
     Loads ATS platform rules from a JSON file or provides default rules.
+
+    This class is used by the ATS analysis engine to get platform-specific parsing rules.
     """
 
     DEFAULT_PLATFORM = "taleo"
 
+    # If no config file is found, these rules are used for analysis.
     DEFAULT_RULES = {
         "taleo": {
             "name": "Taleo",
@@ -41,8 +46,8 @@ class ATSRuleLoader:
     def __init__(self, ats_rules_path: Optional[str] = None):
         """
         Initialize the rule loader and load rules from file or defaults.
-        Args:
-            ats_rules_path: Path to JSON file containing ATS platform rules
+
+        ats_rules_path: Path to JSON file containing ATS platform rules.
         """
         self.ats_rules: Dict[str, Any] = {}
         self.ats_rules_path = ats_rules_path
@@ -50,7 +55,8 @@ class ATSRuleLoader:
 
     def load_rules(self):
         """
-        Load ATS platform rules from JSON file, or use defaults if not available.
+        Loads ATS platform rules from a config file if available.
+        Falls back to built-in defaults if not found or on error.
         """
         if self.ats_rules_path and os.path.exists(self.ats_rules_path):
             try:
@@ -68,26 +74,18 @@ class ATSRuleLoader:
 
     def get_rules(self) -> Dict[str, Any]:
         """
-        Get all loaded ATS platform rules.
-        Returns:
-            Dictionary of ATS platform rules.
+        Returns all loaded ATS platform rules.
         """
         return self.ats_rules
 
     def get_platform_rule(self, platform: str) -> Dict[str, Any]:
         """
-        Get rules for a specific ATS platform.
-        Args:
-            platform: Platform key (e.g., "taleo")
-        Returns:
-            Dictionary of parsing rules for the platform.
+        Returns parsing rules for a specific ATS platform.
         """
         return self.ats_rules.get(platform, self.ats_rules.get(self.DEFAULT_PLATFORM, {}))
 
     def get_available_platforms(self) -> Dict[str, Any]:
         """
-        Get a dictionary of available ATS platforms and their metadata.
-        Returns:
-            Dictionary of platform metadata.
+        Returns a dictionary of available ATS platforms and their metadata.
         """
         return {k: v for k, v in self.ats_rules.items()}

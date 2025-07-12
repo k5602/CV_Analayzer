@@ -143,12 +143,12 @@ This application is built with:
 
 ## Project Structure
 
-- `models/`: Core data processing components
-- `views/`: UI implementation with customtkinter
-- `controllers/`: Business logic and coordination between models and views
+- `core/`: Modular components for ATS rules, keyword extraction, feedback, resume file/text/entity extraction, and dependency validation
+- `controllers/`: Business logic and coordination between modular components and views
+- `views/`: UI implementation with customtkinter, progress indicators, and error dialogs
 - `config/`: Configuration files including ATS platform rules
-- `utils/`: Utility functions and helper modules
-- `assets/`: Icons and other static resources
+- `logs/`: Application logs
+- `venv/`: Virtual environment (not tracked in version control)
 
 ## Contributing
 
@@ -162,4 +162,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 - This tool uses NLP techniques based on spaCy and scikit-learn
 - UI built with customtkinter for a modern appearance
-- Icons and resources from [attribution if applicable]
+- Designed for modularity, performance, and robust error handling
+- Icons and resources from
