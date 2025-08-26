@@ -22,11 +22,11 @@ OPTIONAL_LIBRARIES = [
     # Optional: NLP, OCR, advanced keyword extraction
     "spacy",
     "pytesseract",
-    "fitz",  # PyMuPDF
+    "fitz",
     "sentence_transformers",
     "keybert",
     "nltk",
-    "scikit-learn",
+    "sklearn",
 ]
 
 REQUIRED_MODELS = [

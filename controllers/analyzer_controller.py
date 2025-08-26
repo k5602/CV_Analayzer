@@ -3,10 +3,10 @@ from typing import Dict, List, Any, Optional, Tuple
 from loguru import logger
 import json
 
-from models.resume_parser import ResumeParser
-from models.ats_checker import ATSChecker
-from models.keyword_matcher import KeywordMatcher
-from models.feedback_generator import FeedbackGenerator
+from core.resume_parser import ResumeParser
+from core.ats_checker import ATSChecker
+from core.keyword_matcher import KeywordMatcher
+from core.feedback_generator import FeedbackGenerator
 
 class AnalyzerController:
     """
